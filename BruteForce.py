@@ -1,87 +1,52 @@
-from pynput.mouse import Button, Controller, Listener
-from pynput.keyboard import Key, Controller
+from pynput import keyboard
 from array import array
-from enum import Enum
-import asyncio
 
 
-async def timeout_callback():
-    await asyncio.sleep(0.1)
-    print('echo!')
+class BruteForceNumpad:
+    password: array
+    password_current_view_index: int
 
+    def __init__(self, password_len: int, start_password: int(array)) -> None:
 
-class BruteForce:
+        if len(start_password) > 0:
+            self.password = start_password
+        else:
+            if password_len < 0:
+                print("ERROR: Password length need to be greater then 0")
+                exit()
+            else:
+                self.password.append(password_len * [0])
+        self.setup_keyboard_listener()
 
-    def __init__(self) -> None:
-        pass
+    def next_index(self):
+        self.password_current_view_index += 1
+        if self.password_current_view_index > len(self.password):
+            self.password_current_view_index = 0
+
+    def set_password_index_value(self, value):
+        if self.password_current_view_index <= 9:
+            self.password[self.password_current_view_index] = value
+
+    def get_password_index_value(self):
+        return self.password[self.password_current_view_index]
 
     def run(self):
-        pass
-        # brute force algorithm
+        password_last_index = len(self.password) - 1
+        while self.password[password_last_index] < 9:
+            new_value = self.get_password_index_value() + 1
+            self.set_password_index_value(new_value)
+            self.next_index()
 
     def stop(self):
-        # stop brute force algorithm
         pass
 
+    exit_key_listener: keyboard.Listener
 
-class Modes(Enum):
-    GATHER = 0
-    PROCEED = 1
+    def on_press_exit(self, key):
+        if keyboard.Key.esc == key:
+            print("Keyboard Exit")
+            print("Last password: ", self.password)
+            exit()
 
-
-class BruteForceNumpadMouse(BruteForce):
-    mode: bool
-    mouse: Controller
-    click_targets_positions: array
-    listener: Listener
-    pswd_len: int
-
-    def __init__(self, pswd_len: int):
-        super().__init__()
-        self.pswd_len = pswd_len
-        self.mouse = Controller()
-        self.listener = Listener(
-            on_move=None,
-            on_click=self.on_click,
-            on_scroll=None)
-
-    def add_target(self, x, y) -> bool:
-        if len(self.click_targets_positions) >= self.pswd_len:
-            return False
-
-        self.click_targets_positions.append((x, y))
-        print("Added new target [", len(self.click_targets_positions), "] at:", x, y)
-        print("Waiting for num: ", (len(self.click_targets_positions) + 1))
-
-        return True
-
-    def on_click(self, x, y, button: Button, pressed):
-        if button.left:
-            self.listener.stop()
-            success = self.add_target(x, y)
-            if not success:
-                self.set_mode(Modes.PROCEED)
-
-    def set_mode(self, mode: Modes):
-        self.mode = bool(mode)
-        if mode == Modes.GATHER:
-            print("Mode has been changed to: [GATHER]")
-            self.listener.start()
-        else:
-            print("Mode has been changed to: [CRACK]")
-            self.listener.stop()
-
-    async def crack(self, target_index):
-        self.mouse.position = self.click_targets_positions[target_index]
-        self.mouse.press(Key.left)
-        await asyncio.sleep(0.1)
-
-    async def confirm_keypad(self):
-        self.confirm_keypad().send(Key.enter)
-        pass
-
-    def run(self):
-        self.set_mode(Modes.GATHER)
-        print("Click at places in ascending order 0-9")
-        print("Waiting for num: 0")
-        pass
+    def setup_keyboard_listener(self):
+        self.exit_key_listener = keyboard.Listener()
