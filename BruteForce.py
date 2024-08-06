@@ -1,7 +1,8 @@
 from pynput.mouse import Button, Controller, Listener
 from pynput.keyboard import Key, Controller
-from Timer import Timer
-from asyncio import new_event_loop, set_event_loop, get_event_loop
+from array import array
+from enum import Enum
+import asyncio
 
 
 async def timeout_callback():
@@ -10,69 +11,77 @@ async def timeout_callback():
 
 
 class BruteForce:
-    pswd_len: int
 
-    def __init__(self, pswd_len) -> None:
-        self.pswd_len = pswd_len
+    def __init__(self) -> None:
         pass
 
     def run(self):
         pass
-        # brute force algotithm
+        # brute force algorithm
 
     def stop(self):
         # stop brute force algorithm
         pass
 
 
-class BruteForceMouse(BruteForce):
+class Modes(Enum):
+    GATHER = 0
+    PROCEED = 1
+
+
+class BruteForceNumpadMouse(BruteForce):
     mode: bool
     mouse: Controller
-    targets: set
+    click_targets_positions: array
     listener: Listener
+    pswd_len: int
 
-
-    def __init__(self):
-        self.__init_subclass__()
+    def __init__(self, pswd_len: int):
+        super().__init__()
+        self.pswd_len = pswd_len
         self.mouse = Controller()
+        self.listener = Listener(
+            on_move=None,
+            on_click=self.on_click,
+            on_scroll=None)
 
+    def add_target(self, x, y) -> bool:
+        if len(self.click_targets_positions) >= self.pswd_len:
+            return False
 
-    def gather_targets(self):
-        pass
+        self.click_targets_positions.append((x, y))
+        print("Added new target [", len(self.click_targets_positions), "] at:", x, y)
+        print("Waiting for num: ", (len(self.click_targets_positions) + 1))
 
-    def on_click(self,x,y,button: Button,pressed):
+        return True
+
+    def on_click(self, x, y, button: Button, pressed):
         if button.left:
-            self.targets.add((x,y))
+            self.listener.stop()
+            success = self.add_target(x, y)
+            if not success:
+                self.set_mode(Modes.PROCEED)
 
-    def clean_targets(self):
-        self.targets.clear()
-
-    def set_mode(self, mode: bool):
-        self.mode = mode
-
-    async def
-    def run(self):
-        if self.mode == 0: # collecting data
-            self.listener = self.mouse.Listener(
-                    on_click=self.on_click)
+    def set_mode(self, mode: Modes):
+        self.mode = bool(mode)
+        if mode == Modes.GATHER:
+            print("Mode has been changed to: [GATHER]")
             self.listener.start()
         else:
-            targets_iter = iter(self.targets)
-            self.mouse.position = (next(targets_iter))
-            self.mouse.press(Key.left)
-            self.mouse.release(Key.left)
-            timer = Timer(2,)
-            loop = new_event_loop()
-            set_event_loop(loop)
-            try:
-                loop.run_until_complete()
-            finally:
-                loop.run_until_complete(loop.shutdown_asyncgens())
-                loop.close()
+            print("Mode has been changed to: [CRACK]")
+            self.listener.stop()
 
+    async def crack(self, target_index):
+        self.mouse.position = self.click_targets_positions[target_index]
+        self.mouse.press(Key.left)
+        await asyncio.sleep(0.1)
 
+    async def confirm_keypad(self):
+        self.confirm_keypad().send(Key.enter)
+        pass
 
-
-
-
-
+    def run(self):
+        self.set_mode(Modes.GATHER)
+        print("Click at places in ascending order 0-9")
+        print("Waiting for num: 0")
+        pass
