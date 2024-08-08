@@ -6,47 +6,39 @@ class BruteForceNumpad:
     password: array
     password_current_view_index: int
 
-    def __init__(self, password_len: int, start_password: int(array)) -> None:
+    def __init__(self, password_len: int) -> None:
 
-        if len(start_password) > 0:
-            self.password = start_password
+        if password_len < 0:
+             print("ERROR: Password length need to be greater then 0")
+             exit()
         else:
-            if password_len < 0:
-                print("ERROR: Password length need to be greater then 0")
-                exit()
-            else:
-                self.password.append(password_len * [0])
-        self.setup_keyboard_listener()
+            self.password = password_len * [0]
+        self.password_current_view_index = 0
+        print("Password Set:", self.password)
 
-    def next_index(self):
+    def next_password_index(self):
         self.password_current_view_index += 1
         if self.password_current_view_index > len(self.password):
             self.password_current_view_index = 0
 
     def set_password_index_value(self, value):
-        if self.password_current_view_index <= 9:
+        if self.password_current_view_index <= len(self.password):
             self.password[self.password_current_view_index] = value
 
     def get_password_index_value(self):
         return self.password[self.password_current_view_index]
 
     def run(self):
-        password_last_index = len(self.password) - 1
-        while self.password[password_last_index] < 9:
-            new_value = self.get_password_index_value() + 1
-            self.set_password_index_value(new_value)
-            self.next_index()
+        self.generate_next_password()
+        self.next_password_index()
+        if self.password[len(self.password)-1] != 9:
+            self.run()
 
-    def stop(self):
-        pass
+    def generate_next_password(self):
+        if self.password[self.password_current_view_index] < 10:
+            self.password[self.password_current_view_index] = self.password + 1
+            print("New Password:", self.password)
 
-    exit_key_listener: keyboard.Listener
 
-    def on_press_exit(self, key):
-        if keyboard.Key.esc == key:
-            print("Keyboard Exit")
-            print("Last password: ", self.password)
-            exit()
 
-    def setup_keyboard_listener(self):
-        self.exit_key_listener = keyboard.Listener()
+
