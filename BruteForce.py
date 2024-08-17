@@ -1,11 +1,22 @@
 from pynput import keyboard
 from array import array
+from math import log10, floor
+
+
+def count_digits(value: int):
+    return floor(log10(value) + 1)
+
+
+def get_single_digit(value, digit_position: int, digit_amount: int):
+    lside_digit_sequence = floor(
+        value / (10 ^ (digit_amount - (digit_amount - digit_position)))) * 10 ^ digit_position
+    rside_digit_sequence = floor(value - lside_digit_sequence)
+    return rside_digit_sequence / 10 ^ (digit_amount - digit_position)
 
 
 class BruteForceNumpad:
     password: array
     password_current_view_index: int
-    password_checked_number: int
     terminate: bool
 
     def __init__(self, password_len: int) -> None:
@@ -40,13 +51,6 @@ class BruteForceNumpad:
     def generate_password(self):
         if self.terminate:
             return
-
-        success = self.increase_current_password_by_index()
-        if not success:
-            self.next_password_index()
-
-        if self.password[len(self.password) - 1] != 9:
-            self.generate_password()
 
     def increase_current_password_by_index(self):
         if self.password[self.password_current_view_index] < 10:
