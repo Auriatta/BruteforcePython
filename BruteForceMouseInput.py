@@ -1,13 +1,10 @@
 import sys
-
 from BruteForce import BruteForceDigitsGenerator
 from pynput import mouse
 from pynput import keyboard
 from array import array
 from enum import Enum
-import asyncio
 from time import sleep
-from sys import exit
 
 
 class Modes(Enum):

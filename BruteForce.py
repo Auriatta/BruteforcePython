@@ -1,6 +1,4 @@
 import sys
-
-from pynput import keyboard
 from array import array
 from math import log10, floor
 
